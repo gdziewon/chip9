@@ -19,8 +19,8 @@ impl Display {
         let grid = [[false; DISPLAY_HEIGHT]; DISPLAY_WIDTH];
         let buffer: Vec<u32> = vec![0; DISPLAY_WIDTH * DISPLAY_HEIGHT];
         let colors = Colors {
-            filled: Color::from_u8(0xFF, 0xFF, 0xFF),
-            empty: Color::from_u8(0, 0, 0)
+            filled: Color::from((0xFF, 0xFF, 0xFF)),
+            empty: Color::from((0, 0, 0))
         };
 
         Display { grid, buffer, window: None, colors, scale: DISPLAY_SCALE }
@@ -44,7 +44,6 @@ impl Display {
         Ok(())
     }
 
-    // Get the key pressed by the user
     pub fn get_key_press(&self, keyboard: &super::Keys) -> Option<u8> {
         self.window.as_ref().unwrap().get_keys_pressed(KeyRepeat::No)
         .iter()
@@ -52,12 +51,10 @@ impl Display {
         .copied()
     }
 
-    // Check if a key is pressed
     pub(super) fn is_key_down(&self, key: Key) -> bool {
         self.window.as_ref().unwrap().is_key_down(key)
     }
 
-    // Check if the window is open
     pub(super) fn is_open(&self) -> bool {
         match self.window.as_ref() {
             Some(window) => window.is_open(),
@@ -65,7 +62,6 @@ impl Display {
         }
     }
 
-    // Set color palette for the display
     pub(super) fn set_colors(&mut self, filled: Color, empty: Color) {
         self.colors.filled = filled;
         self.colors.empty = empty;
@@ -83,7 +79,6 @@ impl Display {
 
     }
 
-    // Clear the display
     pub(super) fn clear(&mut self) {
         self.grid = [[false; DISPLAY_HEIGHT]; DISPLAY_WIDTH];
         self.update_buffer();
@@ -97,7 +92,6 @@ impl Display {
         &self.grid
     }
 
-    // Draw a sprite on the display
     pub(super) fn draw(&mut self, horizontal_pos: usize, vertical_pos: usize, sprite: impl Iterator<Item = u8>) -> bool {
         let mut collision = false;
         for (j, byte) in sprite.enumerate() {
@@ -123,8 +117,8 @@ impl Display {
 
     // Update buffer with grid
     fn update_buffer(&mut self) {
-        for i in 0..DISPLAY_WIDTH {
-            for j in 0..DISPLAY_HEIGHT {
+        for j in 0..DISPLAY_HEIGHT {
+            for i in 0..DISPLAY_WIDTH {
                 let color = if self.grid[i][j] { &self.colors.filled } else { &self.colors.empty };
                 self.buffer[i + j * DISPLAY_WIDTH] = color.value();
             }
@@ -143,12 +137,13 @@ pub struct Color {
     value: u32,
 }
 
-impl Color {
-    pub fn from_u8(r: u8, g: u8, b: u8) -> Self {
-        let value = ((r as u32) << 16) | ((g as u32) << 8) | b as u32;
-        Self { value }
+impl From<(u8, u8, u8)> for Color {
+    fn from((r, g, b): (u8, u8, u8)) -> Self {
+        Self { value: ((r as u32) << 16) | ((g as u32) << 8) | b as u32 }
     }
+}
 
+impl Color {
     fn value(&self) -> u32 {
         self.value
     }

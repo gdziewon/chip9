@@ -17,8 +17,8 @@ fn main() {
     let mut chip8 = Chip8::new();
     chip8.load_program(program).unwrap();
 
-    let purple = Color::from_u8(0x80, 0, 0x80);
-    let pink = Color::from_u8(0xFF, 0xC0, 0xCB);
+    let purple = Color::from((0x80, 0, 0x80));
+    let pink = Color::from((0xFF, 0xC0, 0xCB));
     chip8.set_colors(purple, pink);
 
     if let Err(e) = chip8.run() {

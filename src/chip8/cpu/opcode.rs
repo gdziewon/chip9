@@ -12,7 +12,7 @@ impl Addr {
         Self::from(0)
     }
 
-    pub fn from(val: u16) -> Self { // todo: should I return result here?
+    pub fn from(val: u16) -> Self {
         Self(val & ADDR_MASK)
     }
 
@@ -39,7 +39,7 @@ impl AddAssign<u16> for Addr {
 pub struct Nib(u8);
 
 impl Nib {
-    pub const fn from(val: u8) -> Self { // todo: should I return result here?
+    pub const fn from(val: u8) -> Self {
         Self(val & NIB_MASK)
     }
 
@@ -65,9 +65,9 @@ pub enum OpCode {
     XorReg(Nib, Nib),         // 8xy3 - XOR Vx, Vy
     AddReg(Nib, Nib),         // 8xy4 - ADD Vx, Vy
     SubReg(Nib, Nib),         // 8xy5 - SUB Vx, Vy
-    ShiftRight(Nib, Nib),     // 8xy6 - SHR Vx {, Vy}
+    ShiftRight(Nib, Nib),     // 8xy6 - SHR Vx {, Vy} - Vy is not used
     SubNot(Nib, Nib),         // 8xy7 - SUBN Vx, Vy
-    ShiftLeft(Nib, Nib),      // 8xyE - SHL Vx {, Vy}
+    ShiftLeft(Nib, Nib),      // 8xyE - SHL Vx {, Vy} - Vy is not used
     SkipNotEqualReg(Nib, Nib),// 9xy0 - SNE Vx, Vy
     LoadIndex(Addr),          // Aaaa - LD I, addr
     JumpV0(Addr),             // Baaa - JP V0, addr
