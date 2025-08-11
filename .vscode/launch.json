@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug CHIP-8 Emulator",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=chip8",
+                    "--package=chip8"
+                ],
+                "filter": {
+                    "name": "chip8",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "${input:romPath}"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "romPath",
+            "type": "promptString",
+            "description": "Enter the path to the CHIP-8 ROM",
+            "default": "games/Cave.ch8"
+        }
+    ]
+}
