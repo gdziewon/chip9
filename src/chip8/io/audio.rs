@@ -1,20 +1,21 @@
-use rodio::{source::SineWave, OutputStream, Sink, Source as _};
+use rodio::{source::SineWave, OutputStream, OutputStreamBuilder, Sink, Source as _};
 
 const SINEWAVE_FREQUENCY: f32 = 440.0; // A4
 
 
 pub struct Audio {
+    _stream_handle: OutputStream,
     audio: Sink
 }
 
 impl Audio {
     pub(super) fn new() -> Self {
-        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let audio = Sink::try_new(&stream_handle).unwrap();
+        let _stream_handle = OutputStreamBuilder::open_default_stream().unwrap();
+        let audio = Sink::connect_new(&_stream_handle.mixer());
         let source = SineWave::new(SINEWAVE_FREQUENCY).repeat_infinite();
         audio.append(source);
         audio.pause();
-        Audio {audio}
+        Audio { _stream_handle, audio}
     }
 
     pub(super) fn pause(&self) {
