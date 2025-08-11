@@ -1,15 +1,21 @@
-use std::sync::atomic::AtomicU8;
-use std::thread;
-use std::time::Duration;
-use std::sync::{Arc, atomic::Ordering};
+use std::{
+    sync::{
+        Arc,
+        atomic::{
+            Ordering,
+            AtomicU8,
+        },
+    },
+    thread,
+    time::Duration,
+};
 
 use crate::errors::Chip8Error;
 use crate::chip8::io::IO;
-use super::opcode::{Addr, Nib};
+use super::opcode::{Addr, Nib, OpCode};
 use super::timer_clock::TimerClock;
 use super::registers::Registers;
 
-use super::opcode::OpCode;
 use crate::chip8::memory::Memory;
 
 pub const PROGRAM_START: u16 = 0x200;

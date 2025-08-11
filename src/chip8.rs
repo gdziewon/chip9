@@ -2,22 +2,15 @@ pub mod memory;
 pub mod cpu;
 pub mod io;
 
-pub use memory::Memory;
-use crate::{chip8::io::Color, errors::Chip8Error};
+use std::{collections::HashMap, fs::File, thread, time::{Duration, Instant}};
+use minifb::{Key, Scale};
+
+use crate::errors::Chip8Error;
+use io::{IO, Color};
+use memory::Memory;
 use cpu::CPU;
 
-use std::{collections::HashMap, fs::File, thread, time::{Duration, Instant}};
-
-use minifb::{Key, Scale}; // GUI library
-
-use crate::chip8::io::IO; // Audio library
-
-// Memory
-pub const MEMORY_SIZE: usize = 1024 * 4;
-pub const PROGRAM_START: u16 = 0x200;
-
-// Display and timers update frequency
-pub const CPU_FREQ: f64 = 1.0 / 700.0; // 500hz
+pub const CPU_FREQ: f64 = 1.0 / 700.0;
 
 pub struct Chip8 {
     cpu: CPU,
@@ -26,7 +19,6 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    // Creates a new Chip8 instance with the given key bindings
     pub fn new() -> Self {
         let cpu = CPU::new();
         let mem = Memory::new();
@@ -39,7 +31,6 @@ impl Chip8 {
     }
 
     pub fn run(&mut self) -> Result<(), Chip8Error> {
-        // Open window
         self.io.display_init()?;
 
         let tick = Duration::from_secs_f64(CPU_FREQ);
@@ -64,7 +55,7 @@ impl Chip8 {
             }
         }
 
-        self.cpu.shutdown(); // FIXME: when clicking X, CPU stops but the window doesnt close
+        self.cpu.shutdown();
 
         Ok(())
     }
@@ -75,10 +66,6 @@ impl Chip8 {
 
     pub fn set_keyboard_bindings(&mut self, bindings: HashMap<u8, Key>) {
         self.io.keyboard_set_bindings(bindings);
-    }
-
-    pub fn set_scale(&mut self, scale: Scale) {
-        self.io.display_set_scale(scale);
     }
 }
 

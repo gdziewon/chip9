@@ -7,7 +7,7 @@ use std::{
     time::{Duration, Instant}
 };
 
-const TIMER_FREQ: f64 = 1.0 / 60.0; // 60Hz
+const TIMER_FREQ: f64 = 1.0 / 60.0; // 60Hz - shouldn't be changed
 
 pub struct TimerClock {
     delay: Arc<AtomicU8>,

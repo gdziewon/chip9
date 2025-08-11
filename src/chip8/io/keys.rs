@@ -20,6 +20,8 @@ const DEFAULT_BINDINGS: [(u8, Key); 16] = [
     (0xF, Key::V),
 ];
 
+
+// todo: refactor this from the ground up
 pub(super) struct Keys {
     chip8_to_minifb: HashMap<u8, Key>,
     minifb_to_chip8: HashMap<Key, u8>,

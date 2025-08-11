@@ -4,13 +4,12 @@ mod audio;
 
 use std::collections::HashMap;
 
-use display::Display;
+use crate::errors::Chip8Error;
 pub use display::Color;
+use display::Display;
 use keys::Keys;
 use audio::Audio;
-use minifb::{Key, Scale};
-
-use crate::errors::Chip8Error;
+use minifb::Key;
 
 pub struct IO {
     keyboard: Keys,
@@ -32,10 +31,6 @@ impl IO { // todo: we couild do the stuf with IO<Uinit> IO<Init> for the display
 
     pub fn keyboard_set_bindings(&mut self, bindings: HashMap<u8, Key>) {
         self.keyboard = Keys::from(bindings);
-    }
-
-    pub fn display_set_scale(&mut self, scale: Scale) {
-        self.display.set_scale(scale);
     }
 
     pub fn display_set_colors(&mut self, filled: Color, empty: Color) {

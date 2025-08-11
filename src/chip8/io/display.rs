@@ -1,11 +1,13 @@
 use minifb::{Key, KeyRepeat, Scale, Window, WindowOptions};
+
 use crate::errors::Chip8Error;
 
-pub const DISPLAY_WIDTH: usize = 64;
-pub const DISPLAY_HEIGHT: usize = 32;
-pub const DISPLAY_SCALE: Scale = Scale::X16;
+const DISPLAY_WIDTH: usize = 64;
+const DISPLAY_HEIGHT: usize = 32;
+const DISPLAY_SCALE: Scale = Scale::X16;
 const WINDOW_NAME: &str = "Chip8 Emulator";
 
+// todo: refactor from the ground up, maybe pixels + winit?
 pub struct Display {
     grid: [[bool; DISPLAY_HEIGHT]; DISPLAY_WIDTH],
     window: Option<Window>,
@@ -84,14 +86,6 @@ impl Display {
         self.update_buffer();
     }
 
-    pub fn close(&mut self) {
-        self.window = None;
-    }
-
-    pub fn get_grid(&self) -> &[[bool; DISPLAY_HEIGHT]; DISPLAY_WIDTH] {
-        &self.grid
-    }
-
     pub(super) fn draw(&mut self, horizontal_pos: usize, vertical_pos: usize, sprite: impl Iterator<Item = u8>) -> bool {
         let mut collision = false;
         for (j, byte) in sprite.enumerate() {
@@ -105,14 +99,6 @@ impl Display {
             }
         }
         collision
-    }
-
-    pub fn set_scale(&mut self, scale: Scale) {
-        self.scale = scale;
-    }
-
-    pub fn get_scale(&self) -> Scale {
-        self.scale
     }
 
     // Update buffer with grid

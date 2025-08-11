@@ -2,12 +2,10 @@ use std::error::Error;
 use std::io::{BufReader, Read};
 use std::fs::File;
 
-
-use crate::chip8::cpu::Addr;
+use crate::chip8::cpu::{Addr, PROGRAM_START};
 use crate::errors::Chip8Error;
 
-pub const MEMORY_SIZE: usize = 1024 * 4;
-pub const PROGRAM_START: u16 = 0x200;
+const MEMORY_SIZE: usize = 1024 * 4;
 const SPRITES_MEMORY: usize = 80;
 
 const SPRITES: [u8; SPRITES_MEMORY] = [
@@ -33,12 +31,11 @@ pub struct Memory {
     memory: [u8; MEMORY_SIZE]
 }
 
-
 impl Memory {
     pub fn new() -> Self {
         let mut memory = [0; MEMORY_SIZE];
 
-        // Load font sprites - 0x00 to 0x4F
+        // sprites - 0x00 to 0x4F
         for (i, &byte) in SPRITES.iter().enumerate() {
             memory[i] = byte;
         }
@@ -54,7 +51,7 @@ impl Memory {
         self.memory[addr.value() as usize] = data;
     }
 
-    // Fetches an instruction from memory - 2 bytes
+    // fetches 2 bytes
     pub fn get_instruction(&self, addr: Addr) -> u16 {
         let high_byte = self.read_byte(addr);
         let low_byte = self.read_byte(addr + 1);
@@ -73,7 +70,7 @@ impl Memory {
         Ok(())
     }
 
-    // Loads program from file
+    // todo: remove it, lets use load only
     pub fn load_from_file(&mut self, file: &File) -> Result<(), Box<dyn Error>> {
         let f = BufReader::new(file);
 
