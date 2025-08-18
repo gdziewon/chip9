@@ -1,5 +1,5 @@
-use chip8::chip8::io::Color;
 use chip8::Chip8;
+use chip8::Emulator;
 use std::fs::File;
 use clap::Parser;
 use std::path::PathBuf;
@@ -17,11 +17,9 @@ fn main() {
     let mut chip8 = Chip8::new();
     chip8.load_program(program).unwrap();
 
-    let purple = Color::from((0x80, 0, 0x80));
-    let pink = Color::from((0xFF, 0xC0, 0xCB));
-    chip8.set_colors(purple, pink);
+    let mut app = Emulator::new();
 
-    if let Err(e) = chip8.run() {
+    if let Err(e) = app.run(chip8) {
         eprintln!("Error while running chip8: {e}");
     }
 }

@@ -1,7 +1,5 @@
-mod opcode;
-mod timer_clock;
-mod registers;
-mod cpu;
+pub mod opcode;
+pub mod timer_clock;
+pub mod registers;
 
-pub use cpu::{CPU, PROGRAM_START};
 pub use opcode::{Addr, Nib, OpCode};

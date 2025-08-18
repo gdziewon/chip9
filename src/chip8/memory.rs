@@ -2,9 +2,10 @@ use std::error::Error;
 use std::io::{BufReader, Read};
 use std::fs::File;
 
-use crate::chip8::cpu::{Addr, PROGRAM_START};
+use crate::chip8::cpu::Addr;
 use crate::errors::Chip8Error;
 
+pub const PROGRAM_START: u16 = 0x200;
 const MEMORY_SIZE: usize = 1024 * 4;
 const SPRITES_MEMORY: usize = 80;
 

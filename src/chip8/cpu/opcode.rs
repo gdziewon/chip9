@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, SubAssign};
 use crate::errors::Chip8Error;
 
 const ADDR_MASK: u16 = 0x0FFF;
@@ -32,6 +32,12 @@ impl Add<u16> for Addr {
 impl AddAssign<u16> for Addr {
     fn add_assign(&mut self, rhs: u16) {
         self.0 = self.0 + rhs
+    }
+}
+
+impl SubAssign<u16> for Addr {
+    fn sub_assign(&mut self, rhs: u16) {
+        self.0 = self.0 - rhs;
     }
 }
 
@@ -131,7 +137,7 @@ impl Deconstructed {
 }
 
 impl OpCode {
-    pub(super) fn decode(code: u16) -> Result<Self, Chip8Error> {
+    pub fn decode(code: u16) -> Result<Self, Chip8Error> {
         use OpCode::*;
 
         let dec = Deconstructed::new(code);
