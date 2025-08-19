@@ -1,10 +1,10 @@
 use minifb::Key;
 use minifb::{Window, WindowOptions, ScaleMode, Scale};
 
-use crate::Chip8;
-use crate::errors::Chip8Error;
-use crate::chip8::Display;
-use crate::chip8::Keyboard;
+use crate::Chip9;
+use crate::errors::Chip9Error;
+use crate::chip9::Display;
+use crate::chip9::Keyboard;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use std::thread;
@@ -33,7 +33,7 @@ impl Emulator {
         Self { window: None, buffer, colors, bindings: Bindings::default() }
     }
 
-    pub fn run(&mut self, mut chip8: Chip8) -> Result<(), Chip8Error> {
+    pub fn run(&mut self, mut chip9: Chip9) -> Result<(), Chip9Error> {
         let window = Window::new(
             WINDOW_NAME,
             DISPLAY_WIDTH,
@@ -45,7 +45,7 @@ impl Emulator {
                 ..WindowOptions::default()
             },
         )
-        .map_err(Chip8Error::WindowCreationError)?;
+        .map_err(Chip9Error::WindowCreationError)?;
 
         self.window = Some(window);
 
@@ -53,11 +53,11 @@ impl Emulator {
         let mut next = Instant::now() + tick;
 
         while self.window.as_ref().unwrap().is_open() {
-            self.update_keyboard(&mut chip8.keyboard);
-            self.render(&chip8.display)?;
+            self.update_keyboard(&mut chip9.keyboard);
+            self.render(&chip9.display)?;
             let now = Instant::now();
             if now >= next {
-                chip8.execute()?; // todo: add audio
+                chip9.execute()?; // todo: add audio
                 next += tick
             } else {
                 thread::sleep(next - now);
@@ -67,7 +67,7 @@ impl Emulator {
         Ok(())
     }
 
-    fn render(&mut self, display: &Display) -> Result<(), Chip8Error> {
+    fn render(&mut self, display: &Display) -> Result<(), Chip9Error> {
         let grid = display.grid();
         for j in 0..DISPLAY_HEIGHT {
             for i in 0..DISPLAY_WIDTH {
@@ -77,14 +77,14 @@ impl Emulator {
         }
         self.window.as_mut().unwrap()
             .update_with_buffer(&self.buffer, DISPLAY_WIDTH, DISPLAY_HEIGHT)
-            .map_err(Chip8Error::WindowUpdateError)
+            .map_err(Chip9Error::WindowUpdateError)
     }
 
     fn update_keyboard(&self, keyboard: &mut Keyboard) {
         let window = self.window.as_ref().unwrap();
         let pressed_keys: Vec<u8> = window.get_keys()
             .iter()
-            .filter_map(|key| self.bindings.get_chip8_key(key))
+            .filter_map(|key| self.bindings.get_chip9_key(key))
             .collect();
         keyboard.set_pressed(&pressed_keys);
     }
@@ -119,7 +119,7 @@ impl Default for Bindings {
 }
 
 impl Bindings {
-    pub fn get_chip8_key(&self, key: &Key) -> Option<u8> {
+    pub fn get_chip9_key(&self, key: &Key) -> Option<u8> {
         self.0.get(key).copied()
     }
 }

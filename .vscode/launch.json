@@ -8,11 +8,11 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=chip8",
-                    "--package=chip8"
+                    "--bin=chip9",
+                    "--package=chip9"
                 ],
                 "filter": {
-                    "name": "chip8",
+                    "name": "chip9",
                     "kind": "bin"
                 }
             },

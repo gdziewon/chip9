@@ -1,5 +1,5 @@
 use std::ops::{Add, AddAssign, SubAssign};
-use crate::errors::Chip8Error;
+use crate::errors::Chip9Error;
 
 const ADDR_MASK: u16 = 0x0FFF;
 const NIB_MASK: u8 = 0x0F;
@@ -137,7 +137,7 @@ impl Deconstructed {
 }
 
 impl OpCode {
-    pub fn decode(code: u16) -> Result<Self, Chip8Error> {
+    pub fn decode(code: u16) -> Result<Self, Chip9Error> {
         use OpCode::*;
 
         let dec = Deconstructed::new(code);
@@ -147,7 +147,7 @@ impl OpCode {
                 0x0E0 => Ok(ClearScreen),
                 0x0EE => Ok(Return),
                 0x000 => Ok(NoOp),
-                _ => Err(Chip8Error::UnrecognizedOpcode(dec.code)),
+                _ => Err(Chip9Error::UnrecognizedOpcode(dec.code)),
             },
 
             0x1 => Ok(Jump(dec.addr)),
@@ -174,7 +174,7 @@ impl OpCode {
                 0x6 => Ok(ShiftRight(dec.x, dec.y)),
                 0x7 => Ok(SubNot(dec.x, dec.y)),
                 0xE => Ok(ShiftLeft(dec.x, dec.y)),
-                _ => Err(Chip8Error::UnrecognizedOpcode(dec.code)),
+                _ => Err(Chip9Error::UnrecognizedOpcode(dec.code)),
             },
 
             0x9 if dec.n.value() == 0x0 => Ok(SkipNotEqualReg(dec.x, dec.y)),
@@ -190,7 +190,7 @@ impl OpCode {
             0xE => match dec.kk {
                 0x9E => Ok(SkipKeyPressed(dec.x)),
                 0xA1 => Ok(SkipKeyNotPressed(dec.x)),
-                _ => Err(Chip8Error::UnrecognizedOpcode(dec.code)),
+                _ => Err(Chip9Error::UnrecognizedOpcode(dec.code)),
             },
 
             0xF => match dec.kk {
@@ -203,10 +203,10 @@ impl OpCode {
                 0x33 => Ok(LoadBCD(dec.x)),
                 0x55 => Ok(StoreRegs(dec.x)),
                 0x65 => Ok(LoadRegs(dec.x)),
-                _ => Err(Chip8Error::UnrecognizedOpcode(dec.code)),
+                _ => Err(Chip9Error::UnrecognizedOpcode(dec.code)),
             },
 
-            _ => Err(Chip8Error::UnrecognizedOpcode(dec.code)),
+            _ => Err(Chip9Error::UnrecognizedOpcode(dec.code)),
         }
     }
 }

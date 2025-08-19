@@ -18,8 +18,8 @@ impl Keyboard {
     }
 
     /// Is the CHIP-8 key pressed?
-    pub fn is_key_pressed(&self, chip8_key: u8) -> bool {
-        self.pressed.get(chip8_key as usize).copied().unwrap_or(false)
+    pub fn is_key_pressed(&self, chip9_key: u8) -> bool {
+        self.pressed.get(chip9_key as usize).copied().unwrap_or(false)
     }
 
     /// Get the first pressed CHIP-8 key, if any

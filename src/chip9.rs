@@ -5,7 +5,7 @@ mod keyboard;
 
 use std::fs::File;
 
-use crate::errors::Chip8Error;
+use crate::errors::Chip9Error;
 use memory::{Memory, PROGRAM_START};
 pub use display::Display;
 pub use keyboard::Keyboard;
@@ -27,7 +27,7 @@ use cpu::registers::Registers;
 const STACK_DEPTH: usize = 16;
 const SPRITE_SIZE: u16 = 5;
 
-pub struct Chip8 {
+pub struct Chip9 {
     // Registers
     regs: Registers, // 16 general purpose 8-bit registers
     idx: Addr, // 12-bit address register
@@ -44,7 +44,7 @@ pub struct Chip8 {
     _timer_clock: TimerClock
 }
 
-impl Chip8 {
+impl Chip9 {
     pub fn new() -> Self {
         let regs = Registers::new();
         let idx = Addr::new();
@@ -84,14 +84,14 @@ impl Chip8 {
         self._timer_clock.shutdown();
     }
 
-    fn fetch(&mut self) -> Result<OpCode, Chip8Error> {
+    fn fetch(&mut self) -> Result<OpCode, Chip9Error> {
         let instruction = self.mem.get_instruction(self.pc);
         self.pc += 2;
 
         OpCode::decode(instruction)
     }
 
-    pub fn execute(&mut self) -> Result<(), Chip8Error> {
+    pub fn execute(&mut self) -> Result<(), Chip9Error> {
         let opcode = self.fetch()?;
 
         match opcode {
@@ -279,7 +279,7 @@ impl Chip8 {
         self.regs[vx] = self.dt.load(Ordering::Relaxed);
     }
 
-    fn wait_key(&mut self, vx: Nib) { // todo: gotta refactor that
+    fn wait_key(&mut self, vx: Nib) {
         if let Some(key) = self.keyboard.get_key_press() {
             self.regs[vx] = key;
         } else {

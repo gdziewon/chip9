@@ -2,8 +2,8 @@ use std::error::Error;
 use std::io::{BufReader, Read};
 use std::fs::File;
 
-use crate::chip8::cpu::Addr;
-use crate::errors::Chip8Error;
+use crate::chip9::cpu::Addr;
+use crate::errors::Chip9Error;
 
 pub const PROGRAM_START: u16 = 0x200;
 const MEMORY_SIZE: usize = 1024 * 4;
@@ -64,7 +64,7 @@ impl Memory {
         for (i, byte) in program.enumerate() {
             let idx = PROGRAM_START as usize + i;
             if idx >= MEMORY_SIZE {
-                return Err(Box::new(Chip8Error::TooManyLines(i, MEMORY_SIZE)));
+                return Err(Box::new(Chip9Error::TooManyLines(i, MEMORY_SIZE)));
             }
             self.memory[idx] = byte;
         }
@@ -78,7 +78,7 @@ impl Memory {
         for (i, byte) in f.bytes().enumerate() {
             let idx = PROGRAM_START as usize + i;
             if idx >= MEMORY_SIZE {
-                return Err(Box::new(Chip8Error::TooManyLines(i, MEMORY_SIZE)));
+                return Err(Box::new(Chip9Error::TooManyLines(i, MEMORY_SIZE)));
             }
             self.memory[idx] = byte?;
         }
