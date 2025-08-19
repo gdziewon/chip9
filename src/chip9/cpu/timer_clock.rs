@@ -9,53 +9,78 @@ use std::{
 
 const TIMER_FREQ: f64 = 1.0 / 60.0; // 60Hz - shouldn't be changed
 
+pub struct Timer {
+    value: AtomicU8,
+}
+
+impl Timer {
+    pub fn new() -> Self {
+        Self { value: AtomicU8::new(0) }
+    }
+    pub fn load(&self, val: u8) { self.value.store(val, Ordering::Relaxed); }
+    pub fn get(&self) -> u8 { self.value.load(Ordering::Relaxed) }
+    pub fn tick(&self) {
+        let v = self.value.load(Ordering::Relaxed);
+        if v > 0 {
+            self.value.fetch_sub(1, Ordering::Relaxed);
+        }
+    }
+}
+
 pub struct TimerClock {
-    delay: Arc<AtomicU8>,
-    sound: Arc<AtomicU8>,
-    stop_flag: Arc<AtomicBool>,
+    paused: Arc<AtomicBool>,
+    shutdown: Arc<AtomicBool>,
+    timers: Vec<Arc<Timer>>,
     handle: Option<JoinHandle<()>>,
 }
 
 impl TimerClock {
-    pub fn new(delay: Arc<AtomicU8>, sound: Arc<AtomicU8>) -> Self {
+    pub fn new() -> Self {
         Self {
-            delay,
-            sound,
-            stop_flag: Arc::new(AtomicBool::new(false)),
+            timers: Vec::new(),
+            paused: Arc::new(AtomicBool::new(false)),
+            shutdown: Arc::new(AtomicBool::new(false)),
             handle: None,
         }
     }
 
+    pub fn register(&mut self, timer: Arc<Timer>) {
+        self.timers.push(timer);
+    }
 
-    pub fn start(&mut self) { // todo: should I add some Stopped/Running states for CPU/TimerClock?
-        let thread_stop = self.stop_flag.clone();
-        let delay_clone = self.delay.clone();
-        let sound_clone = self.sound.clone();
+    pub fn start(&mut self) {
+        let timers = self.timers.clone();
+        let paused = self.paused.clone();
+        let shutdown = self.shutdown.clone();
 
         let handle = thread::spawn(move || {
             let tick = Duration::from_secs_f64(TIMER_FREQ);
             let mut next = Instant::now() + tick;
-            while !thread_stop.load(Ordering::Relaxed) {
+            while !shutdown.load(Ordering::Relaxed) {
                 let now = Instant::now();
+
+                if paused.load(Ordering::Relaxed) {
+                    thread::sleep(tick);
+                    continue;
+                }
+
                 if now >= next {
-                    if delay_clone.load(Ordering::Relaxed) > 0 {
-                        delay_clone.fetch_sub(1, Ordering::Relaxed);
+                    for t in &timers {
+                        t.tick();
                     }
-                    if sound_clone.load(Ordering::Relaxed) > 0 {
-                        sound_clone.fetch_sub(1, Ordering::Relaxed);
-                    }
-                    next += tick;
+                next += tick;
                 } else {
                     thread::sleep(next - now);
                 }
             }
         });
-
         self.handle = Some(handle);
     }
 
-    pub fn shutdown(&mut self) { // todo: should be called only on started
-        self.stop_flag.store(true, Ordering::Relaxed);
+    pub fn pause(&self) { self.paused.store(true, Ordering::Relaxed); }
+    pub fn resume(&self) { self.paused.store(false, Ordering::Relaxed); }
+    pub fn shutdown(&mut self) {
+        self.shutdown.store(true, Ordering::Relaxed);
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
         }

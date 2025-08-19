@@ -4,24 +4,14 @@ mod display;
 mod keyboard;
 
 use std::fs::File;
+use std::sync::Arc;
 
-use crate::errors::Chip9Error;
+use crate::{chip9::cpu::timer_clock::{Timer, TimerClock}, errors::Chip9Error};
 use memory::{Memory, PROGRAM_START};
-pub use display::Display;
+pub use display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH};
 pub use keyboard::Keyboard;
 
-use std::{
-    sync::{
-        Arc,
-        atomic::{
-            Ordering,
-            AtomicU8,
-        },
-    },
-};
-
 use cpu::opcode::{Addr, Nib, OpCode};
-use cpu::timer_clock::TimerClock;
 use cpu::registers::Registers;
 
 const STACK_DEPTH: usize = 16;
@@ -31,11 +21,11 @@ pub struct Chip9 {
     // Registers
     regs: Registers, // 16 general purpose 8-bit registers
     idx: Addr, // 12-bit address register
-    dt: Arc<AtomicU8>, // delay timer
-    st: Arc<AtomicU8>, // sound timer
+    dt: Arc<Timer>, // delay timer
+    st: Arc<Timer>, // sound timer
     pc: Addr, // Program counter
     sp: u8, // Stack pointer
-    stack: [Addr; STACK_DEPTH], // 16 16-bit stack fields
+    stack: [Addr; STACK_DEPTH], // 16 12-bit stack fields
 
     mem: Memory,
     pub display: Display, // fixme
@@ -48,8 +38,8 @@ impl Chip9 {
     pub fn new() -> Self {
         let regs = Registers::new();
         let idx = Addr::new();
-        let dt = Arc::new(AtomicU8::new(0));
-        let st = Arc::new(AtomicU8::new(0));
+        let dt = Arc::new(Timer::new());
+        let st = Arc::new(Timer::new());
         let pc = Addr::from(PROGRAM_START);
         let sp = 0x00;
         let stack = [Addr::new(); STACK_DEPTH];
@@ -58,7 +48,9 @@ impl Chip9 {
         let display = Display::new();
         let keyboard = Keyboard::new();
 
-        let mut timer_clock = TimerClock::new(dt.clone(), st.clone());
+        let mut timer_clock = TimerClock::new();
+        timer_clock.register(dt.clone());
+        timer_clock.register(st.clone());
         timer_clock.start();
 
         Self {
@@ -136,7 +128,7 @@ impl Chip9 {
     }
 
     pub fn sound_timer(&self) -> u8 {
-        self.st.load(Ordering::Relaxed)
+        self.st.get()
     }
 
     fn return_subroutine(&mut self) {
@@ -276,7 +268,7 @@ impl Chip9 {
     }
 
     fn load_delay(&mut self, vx: Nib) {
-        self.regs[vx] = self.dt.load(Ordering::Relaxed);
+        self.regs[vx] = self.dt.get();
     }
 
     fn wait_key(&mut self, vx: Nib) {
@@ -288,11 +280,11 @@ impl Chip9 {
     }
 
     fn set_delay(&mut self, vx: Nib) {
-        self.dt.store(self.regs[vx], Ordering::Relaxed);
+        self.dt.load(self.regs[vx]);
     }
 
     fn set_sound(&mut self, vx: Nib) {
-        self.st.store(self.regs[vx], Ordering::Relaxed);
+        self.st.load(self.regs[vx]);
     }
 
     fn add_idx(&mut self, vx: Nib) {

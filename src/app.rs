@@ -3,16 +3,14 @@ use minifb::{Window, WindowOptions, ScaleMode, Scale};
 
 use crate::Chip9;
 use crate::errors::Chip9Error;
-use crate::chip9::Display;
+use crate::chip9::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH};
 use crate::chip9::Keyboard;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use std::thread;
 
-const DISPLAY_WIDTH: usize = 64;
-const DISPLAY_HEIGHT: usize = 32;
-const WINDOW_NAME: &str = "Chip8 Emulator";
-pub const CPU_FREQ: f64 = 1.0 / 700.0;
+const WINDOW_NAME: &str = "Chip9";
+const CPU_FREQ: f64 = 1.0 / 700.0;
 
 pub struct Emulator {
     window: Option<Window>,
