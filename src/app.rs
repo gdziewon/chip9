@@ -55,7 +55,7 @@ impl Emulator {
             self.render(&chip9.display)?;
             let now = Instant::now();
             if now >= next {
-                chip9.execute()?; // todo: add audio
+                chip9.tick()?; // todo: add audio
                 next += tick
             } else {
                 thread::sleep(next - now);
