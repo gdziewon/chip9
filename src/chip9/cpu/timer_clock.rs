@@ -1,10 +1,9 @@
 use std::{
     sync::{
-        atomic::{AtomicBool, AtomicU8, Ordering},
-        Arc
+        atomic::{AtomicU8, Ordering}, mpsc, Arc
     },
     thread::{self, JoinHandle},
-    time::{Duration, Instant}
+    time::Duration
 };
 
 const TIMER_FREQ: f64 = 1.0 / 60.0; // 60Hz - shouldn't be changed
@@ -20,17 +19,19 @@ impl Timer {
     pub fn load(&self, val: u8) { self.value.store(val, Ordering::Relaxed); }
     pub fn get(&self) -> u8 { self.value.load(Ordering::Relaxed) }
     pub fn tick(&self) {
-        let v = self.value.load(Ordering::Relaxed);
-        if v > 0 {
-            self.value.fetch_sub(1, Ordering::Relaxed);
-        }
+        let _ = self.value.fetch_update(
+            Ordering::SeqCst,
+            Ordering::Relaxed,
+            |v| if v > 0 { Some(v - 1) } else { None },
+        );
     }
 }
 
+enum TimerCmd { Pause, Resume, Shutdown }
+
 pub struct TimerClock {
-    paused: Arc<AtomicBool>,
-    shutdown: Arc<AtomicBool>,
     timers: Vec<Arc<Timer>>,
+    tx: Option<mpsc::Sender<TimerCmd>>,
     handle: Option<JoinHandle<()>>,
 }
 
@@ -38,8 +39,7 @@ impl TimerClock {
     pub fn new() -> Self {
         Self {
             timers: Vec::new(),
-            paused: Arc::new(AtomicBool::new(false)),
-            shutdown: Arc::new(AtomicBool::new(false)),
+            tx: None,
             handle: None,
         }
     }
@@ -49,38 +49,54 @@ impl TimerClock {
     }
 
     pub fn start(&mut self) {
+        if self.tx.is_some() {
+            return; // already started
+        }
+
+        let (tx, rx) = mpsc::channel::<TimerCmd>();
         let timers = self.timers.clone();
-        let paused = self.paused.clone();
-        let shutdown = self.shutdown.clone();
+
+        let tick = Duration::from_secs_f64(TIMER_FREQ);
 
         let handle = thread::spawn(move || {
-            let tick = Duration::from_secs_f64(TIMER_FREQ);
-            let mut next = Instant::now() + tick;
-            while !shutdown.load(Ordering::Relaxed) {
-                let now = Instant::now();
-
-                if paused.load(Ordering::Relaxed) {
-                    thread::sleep(tick);
-                    continue;
-                }
-
-                if now >= next {
-                    for t in &timers {
-                        t.tick();
+            let mut paused = false;
+            loop {
+                match rx.recv_timeout(tick) {
+                    Ok(TimerCmd::Pause) => { paused = true; }
+                    Ok(TimerCmd::Resume) => { paused = false; }
+                    Ok(TimerCmd::Shutdown) => break,
+                    Err(mpsc::RecvTimeoutError::Timeout) => {
+                        if !paused {
+                            for t in &timers {
+                                t.tick();
+                            }
+                        }
                     }
-                next += tick;
-                } else {
-                    thread::sleep(next - now);
+                    Err(mpsc::RecvTimeoutError::Disconnected) => break,
                 }
             }
         });
+
+        self.tx = Some(tx);
         self.handle = Some(handle);
     }
 
-    pub fn pause(&self) { self.paused.store(true, Ordering::Relaxed); }
-    pub fn resume(&self) { self.paused.store(false, Ordering::Relaxed); }
+    pub fn pause(&self) {
+        if let Some(tx) = &self.tx {
+            let _ = tx.send(TimerCmd::Pause);
+        }
+    }
+
+    pub fn resume(&self) {
+        if let Some(tx) = &self.tx {
+            let _ = tx.send(TimerCmd::Resume);
+        }
+    }
+
     pub fn shutdown(&mut self) {
-        self.shutdown.store(true, Ordering::Relaxed);
+        if let Some(tx) = self.tx.take() {
+            let _ = tx.send(TimerCmd::Shutdown);
+        }
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
         }
